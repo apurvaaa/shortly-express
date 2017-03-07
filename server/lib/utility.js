@@ -1,7 +1,6 @@
 var Promise = require('bluebird');
 var request = Promise.promisify(require('request'), { multiArgs: true });
 var crypto = require('crypto');
-var hash = crypto.createHash('sha1');
 
 exports.getUrlTitle = function(url) {
   return request(url).then(function(response, html) {
@@ -26,6 +25,7 @@ exports.isValidUrl = function(url) {
 //use crypto methods to secure username and password information
 
 exports.hashing = function (string) {
+  var hash = crypto.createHash('sha1');
   hash.update(string);
   return hash.digest('hex');
 };

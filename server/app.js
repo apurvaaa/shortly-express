@@ -96,13 +96,38 @@ function(req, res, next) {
 
 app.post('/signup', function (req, res, next) {
   console.log(req.body);
-  //check if isuserindatabase returns an empty array
-    //if so, make new user with req.body
-    //if not, bring them to login page and say user already exists
+  return Users.isUserInDatabase(req.body.username)
+  .then (function (results) {
+    if (results[0].length > 0) {
+      throw 'userAlreadyInDatabase';
+    } else {
+      return Users.createUser(req.body.username, req.body.password);
+    }
+  })
+  .then (function () {
+    res.render('login');
+  })
+  .catch(function () {
+    res.render('signup');
+  });
 });
 //add in create and login authentication here
-  //these will be post requests
 
+app.post('/login', function (req, res, next) {
+  return Users.canLogin(req.body.username, req.body.password)
+  .then (function (results) {
+    if (results[0].length !== 1 ) {
+      throw 'cannot login';
+    } else {
+      Sessions.createSession(req.body.username);
+      res.render('index');
+    }
+  })
+  .catch(function() {
+    console.log('login failed');
+    res.render('login');
+  });
+});
 
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail

@@ -18,13 +18,17 @@ module.exports = {
     return db.queryAsync(queryString, queryParams);
   },
 
-  canlogin: function (username, password) {
+  canLogin: function (username, password) {
     var hash = utils.hashing(password);
     var queryString = 'SELECT * FROM users WHERE username = ? and password = ?';
     var queryParams = [username, hash];
     return db.queryAsync(queryString, queryParams);
-  }
+  },
 
-  
+  getUserId: function(username) {
+    var queryString = 'select users.id from users where username = ?';
+    var queryParams = [username];
+    return db.queryAsync(queryString, queryParams);
+  }
   
 };
