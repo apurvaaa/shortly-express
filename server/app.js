@@ -23,6 +23,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 app.get('/', 
 function(req, res) {
+  console.log(req.headers);
   res.render('index');
 });
 
@@ -119,8 +120,14 @@ app.post('/login', function (req, res, next) {
     if (results[0].length !== 1 ) {
       throw 'cannot login';
     } else {
-      Sessions.createSession(req.body.username);
-      res.render('index');
+      Sessions.makeNewSession(req.body.username)
+      .then(function () {
+        Sessions.getSessionKey(req.body.username)
+        .then (function (results) {
+          res.setHeader('Set-Cookie', results[0][0].session_key);
+          res.render('index');
+        });
+      });
     }
   })
   .catch(function() {
