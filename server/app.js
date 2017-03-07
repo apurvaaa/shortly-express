@@ -31,6 +31,14 @@ function(req, res) {
   res.render('index');
 });
 
+app.get('/signup', function(req, res) {
+  res.render('signup');
+});
+
+app.get('/login', function(req, res) {
+  res.render('login');
+});
+
 app.get('/links', 
 function(req, res, next) {
   Links.getAll()
@@ -86,6 +94,14 @@ function(req, res, next) {
 // Write your authentication routes here
 /************************************************************/
 
+app.post('/signup', function (req, res, next) {
+  console.log(req.body);
+  //check if isuserindatabase returns an empty array
+    //if so, make new user with req.body
+    //if not, bring them to login page and say user already exists
+});
+//add in create and login authentication here
+  //these will be post requests
 
 
 /************************************************************/

@@ -23,9 +23,22 @@ module.exports = function(db) {
       timestamp TIMESTAMP\
       );');
   })
+  .then(function() {
+    // Create clicks table
+    return db.queryAsync('CREATE TABLE IF NOT EXISTS users (\
+      id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,\
+      username VARCHAR(20) not null unique, \
+      password CHAR(40) \
+      );');
+    //add salt at a later date
+  })
   /************************************************************/
   /*          Add additional schema queries here              */
   /************************************************************/
+  //make a sessions table 
+
+
+
 
   .error(function(err) {
     console.log(err);
