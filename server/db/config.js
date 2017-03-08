@@ -40,12 +40,11 @@ module.exports = function(db) {
     return db.queryAsync('create table if not EXISTS sessions (\
       id INT not null AUTO_INCREMENT PRIMARY KEY ,\
       session_key char(40) not null unique ,\
-      username_id int, \
-      foreign key (username_id) references \
-      users(id) );');
+      username_id int \
+      );');
   })
 
-
+    
 
   .error(function(err) {
     console.log(err);

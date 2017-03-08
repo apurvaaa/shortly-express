@@ -17,7 +17,14 @@ module.exports = {
     var queryString = 'select * from sessions where sessions.username_id = ?';
     return user.getUserId(username)
     .then (function(results) {
+      console.log(results, 'results from get session key');
       return db.queryAsync(queryString, [results[0][0].id]);
     });
-  }  
+  },  
+
+  deleteSession: function(sessionKey) {
+    var queryString = 'delete from sessions where session_key = ?';
+    return db.queryAsync(queryString, sessionKey);
+  }
+
 };

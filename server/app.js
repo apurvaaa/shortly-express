@@ -8,6 +8,8 @@ var Users = require('./models/user');
 var Links = require('./models/link');
 var Sessions = require('./models/session');
 var Click = require('./models/click');
+var CookieParser = require('./middleware/cookieParser');
+var SessionParser = require('./middleware/sessionParser');
 
 var app = express();
 
@@ -21,27 +23,55 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Serve static files from ../public directory
 app.use(express.static(path.join(__dirname, '../public')));
 
-app.get('/', 
-function(req, res) {
-  console.log(req.headers);
-  res.render('index');
+app.use(CookieParser);
+app.use(SessionParser);
+
+console.log('completed sessionParser');
+
+app.get('/signup', function(req, res) {
+  console.log('in signup');
+  res.render('signup');
 });
+
+app.get('/*', function(req, res, next) {
+  console.log('in get /*', req.session);
+  if (req.session === null) {
+    console.log('you should be redirected to login');
+    res.render('login');
+  } else {
+    console.log(' just before next in app');
+    next();
+  }
+});
+
+/*app.post('/*', function(req, res) {
+  if (req.session === null) {
+    console.log('you should be redirected');
+    res.render('login');
+  } else {
+    next();
+  }
+});*/
+
+/*app.get('/', 
+function(req, res) {
+  res.render('index');
+});*/
 
 app.get('/create', 
 function(req, res) {
   res.render('index');
 });
 
-app.get('/signup', function(req, res) {
-  res.render('signup');
-});
-
+/*
 app.get('/login', function(req, res) {
   res.render('login');
 });
+*/
 
 app.get('/links', 
 function(req, res, next) {
+  console.log(req.cookie, 'this is our cookie from inside links');
   Links.getAll()
   .then(function(results) {
     var links = results[0];
@@ -90,13 +120,12 @@ function(req, res, next) {
     res.status(200).send(link);
   });
 });
-
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
 
 app.post('/signup', function (req, res, next) {
-  console.log(req.body);
+  console.log('inside post signup at app js');
   return Users.isUserInDatabase(req.body.username)
   .then (function (results) {
     if (results[0].length > 0) {
@@ -115,25 +144,32 @@ app.post('/signup', function (req, res, next) {
 //add in create and login authentication here
 
 app.post('/login', function (req, res, next) {
-  return Users.canLogin(req.body.username, req.body.password)
-  .then (function (results) {
-    if (results[0].length !== 1 ) {
-      throw 'cannot login';
-    } else {
-      Sessions.makeNewSession(req.body.username)
-      .then(function () {
-        Sessions.getSessionKey(req.body.username)
-        .then (function (results) {
-          res.setHeader('Set-Cookie', results[0][0].session_key);
-          res.render('index');
+  console.log('inside post login at app js: req.session: ', req.session);
+  if (req.session !== null) {
+    res.render('index');
+  } else {
+    return Users.canLogin(req.body.username, req.body.password)
+    .then (function (results) {
+      if (results[0].length !== 1 ) {
+        throw 'cannot login';
+      } else {
+        Sessions.makeNewSession(req.body.username)
+        .then(function () {
+          Sessions.getSessionKey(req.body.username)
+          .then (function (results) {
+            console.log('post login in app results[0]: ', results);
+            res.cookie('session', results[0][0].session_key);
+            res.cookie('username', req.body.username);
+            res.render('index');
+          });
         });
-      });
-    }
-  })
-  .catch(function() {
-    console.log('login failed');
-    res.render('login');
-  });
+      }
+    })
+    .catch(function() {
+      console.log('login failed');
+      res.render('login');
+    });
+  }
 });
 
 /************************************************************/
@@ -170,6 +206,7 @@ app.get('/*', function(req, res, next) {
 
 app.use(function(err, req, res, next) {
   if (!err.error) {
+    console.log(err);
     return res.sendStatus(err.status);
   }
   res.status(err.status).send(err.error);
